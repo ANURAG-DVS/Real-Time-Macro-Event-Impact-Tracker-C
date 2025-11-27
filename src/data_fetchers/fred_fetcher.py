@@ -23,6 +23,8 @@ from pathlib import Path
 from typing import Optional, List, Dict, Union, Tuple
 
 import pandas as pd
+import requests
+import certifi
 from fredapi import Fred
 
 from config.settings import config
@@ -62,6 +64,10 @@ class FREDDataFetcher:
             )
 
         try:
+            # Set SSL certificate file to use certifi's bundle
+            import os
+            os.environ['SSL_CERT_FILE'] = certifi.where()
+
             # Initialize FRED client
             self.fred_client = Fred(api_key=config.FRED_API_KEY)
             self.cache_dir = config.CACHE_DIR
@@ -398,11 +404,14 @@ class FREDDataFetcher:
         Estimate the release time for an economic indicator.
 
         Args:
-            release_date: Date of the data release
+            release_date: Date of the data release (cannot be None)
             indicator_code: Indicator code from config.MACRO_INDICATORS
 
         Returns:
             datetime: Estimated release datetime with time component
+
+        Raises:
+            ValueError: If release_date is None or invalid
 
         Example:
             >>> from datetime import datetime
@@ -411,6 +420,12 @@ class FREDDataFetcher:
             >>> print(release_dt)
             2024-01-15 08:30:00-05:00
         """
+        if release_date is None:
+            raise ValueError(f"release_date cannot be None for {indicator_code}")
+
+        if not isinstance(release_date, datetime):
+            raise ValueError(f"release_date must be a datetime object for {indicator_code}, got {type(release_date)}")
+
         indicator_info = config.MACRO_INDICATORS[indicator_code]
         typical_time = indicator_info.get('typical_release_time', '08:30')
 

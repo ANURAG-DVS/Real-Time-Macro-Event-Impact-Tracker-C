@@ -605,7 +605,7 @@ class YahooDataFetcher:
         price_data['time_diff'] = abs(price_data['timestamp'] - event_time)
         event_row = price_data.loc[price_data['time_diff'].idxmin()]
 
-        if pd.isna(event_row['close']):
+        if pd.isna(event_row['close']).any():
             self.logger.warning(f"No valid price found at event time {event_time}")
             return {window['label']: 0.0 for window in config.ANALYSIS_WINDOWS}
 
@@ -620,7 +620,7 @@ class YahooDataFetcher:
             price_data['window_diff'] = abs(price_data['timestamp'] - window_time)
             window_row = price_data.loc[price_data['window_diff'].idxmin()]
 
-            if pd.isna(window_row['close']):
+            if pd.isna(window_row['close']).any():
                 self.logger.debug(f"No valid price found at {window_minutes} minutes window")
                 returns[window['label']] = 0.0
             else:
