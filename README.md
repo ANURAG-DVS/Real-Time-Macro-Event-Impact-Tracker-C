@@ -21,4 +21,4 @@ Track how major economic releases (CPI, NFP, GDP) impact financial markets in re
 - Historical trend analysis
 - Professional dashboard
 
-[Detailed setup instructions to be added in subsequent prompts]
+[Detailed setup instructions to be added in subsequent flow of work...]
