@@ -230,13 +230,14 @@ def list_available_indicators() -> None:
     print("═" * 80)
 
     # Table header
-    print("<10")
+    print(f"{'Code':<12} {'Name':<40} {'Frequency':<15}")
     print("─" * 80)
 
     # Table rows
     for code, info in config.MACRO_INDICATORS.items():
-        name = info['name'][:35] + "..." if len(info['name']) > 35 else info['name']
-        print("<10")
+        name = info['name'][:37] + "..." if len(info['name']) > 37 else info['name']
+        frequency = info.get('frequency', 'Unknown')
+        print(f"{code:<12} {name:<40} {frequency:<15}")
 
     print("═" * 80)
     print()
