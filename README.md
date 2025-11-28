@@ -218,3 +218,51 @@ Questions? Open an issue on GitHub!
 ---
 
 **⭐ If this project helped you, please star the repository!**
+
+## ✅ Pre-Launch Checklist
+
+Before using or deploying the tracker:
+
+- [ ] Python 3.9+ installed
+- [ ] All dependencies installed (`pip install -r requirements.txt`)
+- [ ] FRED API key obtained and added to `.env`
+- [ ] Run validation: `python scripts/validate_setup.py`
+- [ ] Test CLI: `python main.py --list-indicators`
+- [ ] Test dashboard: `streamlit run streamlit_app.py`
+- [ ] All tests pass: `python -m pytest tests/`
+- [ ] Code formatted: `black .` (optional)
+- [ ] Documentation reviewed
+
+---
+
+## 🎯 **Summary: Complete Build Order**
+
+To build this project in Cursor, run these prompts **in order**:
+
+1. **PROMPT 1**: Project structure and initialization
+2. **PROMPT 2**: Configuration module (free APIs only)
+3. **PROMPT 3**: FRED data fetcher
+4. **PROMPT 4**: Yahoo Finance data fetcher
+5. **PROMPT 5**: Cache manager utility
+6. **PROMPT 6**: Helper utilities
+7. **PROMPT 7**: Impact analyzer (core logic)
+8. **PROMPT 8**: Visualization and plotting
+9. **PROMPT 9**: Command-line interface
+10. **PROMPT 10**: Streamlit dashboard
+11. **PROMPT 11**: Documentation and examples
+12. **PROMPT 12**: Testing and validation
+
+After completing all prompts, run:
+```bash
+python scripts/validate_setup.py
+```
+
+Then start using it:
+```bash
+python main.py --indicator CPI --plot
+streamlit run streamlit_app.py
+```
+
+**Total Cost: $0** ✅  
+**Total Time: 2-3 hours** (including API key setup)  
+**Recruiter Impact: Maximum** 🚀
