@@ -314,8 +314,20 @@ def run_single_analysis(args) -> int:
             logging.info("📅 Finding latest release date...")
             # Get latest release to determine the date
             latest_release = fred_fetcher.get_latest_release(args.indicator)
-            # For now, use today's date as approximation - in real usage would parse from release data
-            release_date = datetime.datetime.now().replace(hour=8, minute=30, second=0, microsecond=0)
+
+            # Check if FRED data is recent enough (within last 14 days)
+            # If not, use today's date as fallback for recent events
+            fred_date = latest_release.get('date')
+            if fred_date:
+                days_since_fred_release = (datetime.datetime.now() - fred_date.replace(tzinfo=None)).days
+                if days_since_fred_release > 14:
+                    logging.warning(f"FRED data is {days_since_fred_release} days old. Using today's date for recent event analysis.")
+                    release_date = datetime.datetime.now().replace(hour=8, minute=30, second=0, microsecond=0)
+                else:
+                    release_date = fred_date.replace(tzinfo=None) if hasattr(fred_date, 'replace') else fred_date
+            else:
+                # Fallback to today's date if no FRED date available
+                release_date = datetime.datetime.now().replace(hour=8, minute=30, second=0, microsecond=0)
 
         logging.info(f"🎯 Analyzing {args.indicator} release on {release_date.strftime('%Y-%m-%d')}")
 
