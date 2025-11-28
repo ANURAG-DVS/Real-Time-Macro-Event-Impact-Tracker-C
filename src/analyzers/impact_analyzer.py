@@ -82,7 +82,7 @@ class ImpactAnalyzer:
 
         Args:
             indicator_code: FRED indicator code (e.g., 'CPI', 'NFP')
-            release_date: Date of the data release
+            release_date: Date of the data release (None = use latest available)
             hours_after: Hours of market data to analyze after release
 
         Returns:
@@ -105,6 +105,7 @@ class ImpactAnalyzer:
             >>> print(f"Event: {results['event_info']['indicator']}")
             >>> print(f"Top gainer: {results['top_movers']['15min']['gainers'][0]}")
         """
+        # Log the start of analysis with key parameters
         self.logger.info(f"🚀 Starting analysis for {indicator_code} on {release_date}")
 
         # Step 1: Get macro release data

@@ -605,26 +605,35 @@ class YahooDataFetcher:
         price_data['time_diff'] = abs(price_data['timestamp'] - event_time)
         event_row = price_data.loc[price_data['time_diff'].idxmin()]
 
-        if pd.isna(event_row['close']).any():
+        # Extract the event price - use .iloc[0] to get scalar value instead of Series
+        event_price = event_row['close'].iloc[0] if hasattr(event_row['close'], 'iloc') else event_row['close']
+
+        # Handle case where event price is missing or invalid
+        if pd.isna(event_price):
             self.logger.warning(f"No valid price found at event time {event_time}")
             return {window['label']: 0.0 for window in config.ANALYSIS_WINDOWS}
 
-        event_price = event_row['close']
         returns = {}
 
+        # Calculate returns for each configured time window (15min, 30min, 1hr, etc.)
         for window in config.ANALYSIS_WINDOWS:
             window_minutes = window['minutes']
+            # Calculate the future timestamp for this time window
             window_time = event_time + timedelta(minutes=window_minutes)
 
-            # Find closest price to window time
+            # Find the price data point closest to the target window time
+            # This handles irregular trading intervals and market gaps
             price_data['window_diff'] = abs(price_data['timestamp'] - window_time)
             window_row = price_data.loc[price_data['window_diff'].idxmin()]
 
-            if pd.isna(window_row['close']).any():
+            # Extract window price safely
+            window_price = window_row['close'].iloc[0] if hasattr(window_row['close'], 'iloc') else window_row['close']
+
+            # Calculate percentage return: ((future_price - event_price) / event_price) * 100
+            if pd.isna(window_price):
                 self.logger.debug(f"No valid price found at {window_minutes} minutes window")
                 returns[window['label']] = 0.0
             else:
-                window_price = window_row['close']
                 pct_return = ((window_price - event_price) / event_price) * 100
                 returns[window['label']] = round(pct_return, 2)
 
@@ -710,28 +719,34 @@ class YahooDataFetcher:
                 ticker_obj = yf.Ticker(ticker)
                 info = ticker_obj.info
 
-                if not info or 'currentPrice' not in info:
+                if not info:
                     if attempt == max_retries:
-                        raise ValueError(f"Unable to fetch current price for {ticker}. Invalid ticker symbol?")
+                        raise ValueError(f"Unable to fetch data for {ticker}. Invalid ticker symbol?")
+                    continue
+
+                # Extract price data - Yahoo Finance uses different keys during/after market hours
+                # During market hours: 'regularMarketPrice'
+                # After market hours: 'currentPrice' or 'previousClose'
+                current_price = (info.get('regularMarketPrice') or
+                               info.get('currentPrice') or
+                               info.get('previousClose'))
+
+                if current_price is None:
+                    if attempt == max_retries:
+                        raise ValueError(f"No price data available for {ticker}")
                     continue
 
                 # Extract price data
                 price_data = {
                     'ticker': ticker,
-                    'current_price': info.get('currentPrice'),
+                    'current_price': current_price,
                     'previous_close': info.get('previousClose'),
-                    'open': info.get('open'),
-                    'day_high': info.get('dayHigh'),
-                    'day_low': info.get('dayLow'),
+                    'open': info.get('regularMarketOpen') or info.get('open'),
+                    'day_high': info.get('regularMarketDayHigh') or info.get('dayHigh'),
+                    'day_low': info.get('regularMarketDayLow') or info.get('dayLow'),
                     'volume': info.get('volume'),
                     'timestamp': datetime.now(self.timezone)
                 }
-
-                # Validate that we got at least current price
-                if price_data['current_price'] is None:
-                    if attempt == max_retries:
-                        raise ValueError(f"No current price available for {ticker}")
-                    continue
 
                 self.logger.info(f"✅ Fetched current price for {ticker}: ${price_data['current_price']:.2f}")
                 return price_data
